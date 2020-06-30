@@ -1,0 +1,419 @@
+import pandas as pd
+from pandas_datareader import data, wb
+import datetime
+import matplotlib.pyplot as plt
+%matplotlib inline
+start = datetime.datetime(2006,1,1) #this is the start date
+end = datetime.datetime(2016,1,1) # This is latest date of data we will analyze
+BAC = data.DataReader('BAC','yahoo', start, end) # here we get stock prices of data by means of yahoo search and make a data frame object
+
+# we can get the from other banks with the same method as folows:
+# CitiGroup
+C = data.DataReader("C", 'yahoo', start, end)
+
+# Goldman Sachs
+GS = data.DataReader("GS", 'yahoo', start, end)
+
+# JPMorgan Chase
+JPM = data.DataReader("JPM", 'yahoo', start, end)
+
+# Morgan Stanley
+MS = data.DataReader("MS", 'yahoo', start, end)
+
+# Wells Fargo
+WFC = data.DataReader("WFC", 'yahoo', start, end)
+
+#here we create  alis of banks' ticker in order to concatenate them according to these thickers list
+tickers=["BAC","C","GS","JPM","MS","WFC"]
+bank_stocks=pd.concat([BAC,C,GS,JPM,MS,WFC],axis=1,keys=tickers)
+bank_stocks # now we have concatenated all of the banks stock prices as a new data frame name bank_stocks
+bank_stocks.columns.names = ['Bank Ticker','Stock Info'] # we create two new column names as Bank Ticker and Stock Info
+
+# Now our data is ready for explainatory data analysis
+for tick in tickers:
+    print(tick,bank_stocks[tick]["Close"].max()) #for example this is the max Close price for each bank's stock throughout the time period
+
+# we can get the same outcome by using df.xs() method:
+bank_stocks.xs(key="Close",axis=1, level="Stock Info").max()
+
+# here we create a new empty DataFrame called returns in order to see daily price changes of the banks
+#pct_change(periods=1, fill_method='pad', limit=None, freq=None, **kwargs)
+returns=pd.DataFrame()
+for tick in tickers:
+    returns[tick + "Return"]=bank_stocks[tick]["Close"].pct_change()
+returns.head()
+bank_stocks.idxmax() #maximum return prices according to dates
+bank_stocks["BAC"].max() # maximum prices
+bank_stocks["BAC"].min()
+
+returns.idxmin() #returns each bank stock had the worst return
+returns.idxmax()#returns each bank stock had the best returns
+# df.std() method is very useful because it returns the standart deviations of each bank:
+# if standart deviation is larger than others, it means that it is the riskiest among the other
+returns.std()
+# here we understand that Citibank is the riskiest bank 
+returns.loc["2015-01-01":"2015-12-30"].std() # this returns the standart deviation of banks in 2015
+
+#Data Visualization:
+import seaborn as sns 
+sns.pairplot(returns)# here we create a pairplot using seaborn of the returns dataframe to see relations between banks returns of different banks
+bank_stocks.idxmin() #worst single day returns
+
+plt.figure(figsize=(15,10))
+sns.distplot(returns["MSReturn"].loc["2015-01-01":"2015-12-30"],bins=50)
+# here we create a distplot using seaborn of the 2015 returns for Morgan Stanley
+
+plt.figure(figsize=(15,10))
+sns.distplot(returns["CReturn"].loc["2008-01-01":"2008-12-30"],bins=50,color="red")
+# here we create a distplot using seaborn of the 2008 returns for CitiGroup 
+
+# better visualization quality I will import plotly library
+import plotly
+import cufflinks as cf
+from plotly.offline import download_plotlyjs,init_notebook_mode,plot,iplot
+init_notebook_mode(connected=True) #this will connect our notebook to the library
+cf.go_offline()
+
+# This Python 3 environment comes with many helpful analytics libraries installed
+# It is defined by the kaggle/python Docker image: https://github.com/kaggle/docker-python
+# For example, here's several helpful packages to load
+
+import numpy as np # linear algebra
+import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
+
+# Input data files are available in the read-only "../input/" directory
+# For example, running this (by clicking run or pressing Shift+Enter) will list all files under the input directory
+
+import os
+for dirname, _, filenames in os.walk('/kaggle/input'):
+    for filename in filenames:
+        print(os.path.join(dirname, filename))
+
+# You can write up to 5GB to the current directory (/kaggle/working/) that gets preserved as output when you create a version using "Save & Run All" 
+# You can also write temporary files to /kaggle/temp/, but they won't be saved outside of the current session
+from pandas_datareader import data, wb
+import datetime
+import matplotlib.pyplot as plt
+%matplotlib inline
+/opt/conda/lib/python3.7/site-packages/pandas_datareader/compat/__init__.py:7: FutureWarning: pandas.util.testing is deprecated. Use the functions in the public API at pandas.testing instead.
+  from pandas.util.testing import assert_frame_equal
+start = datetime.datetime(2006,1,1) #this is the start date
+end = datetime.datetime(2016,1,1) # This is latest date of data we will analyze
+BAC = data.DataReader('BAC','yahoo', start, end) # here we get stock prices of data by means of yahoo search and make a data frame object
+BAC
+High	Low	Open	Close	Volume	Adj Close
+Date						
+2006-01-03	47.180000	46.150002	46.919998	47.080002	16296700.0	35.054218
+2006-01-04	47.240002	46.450001	47.000000	46.580002	17757900.0	34.681938
+2006-01-05	46.830002	46.320000	46.580002	46.639999	14970700.0	34.726604
+2006-01-06	46.910000	46.349998	46.799999	46.570000	12599800.0	34.674480
+2006-01-09	46.970001	46.360001	46.720001	46.599998	15619400.0	34.696808
+...	...	...	...	...	...	...
+2015-12-24	17.379999	17.219999	17.320000	17.270000	29369400.0	15.859037
+2015-12-28	17.230000	16.980000	17.219999	17.129999	41777500.0	15.730473
+2015-12-29	17.350000	17.160000	17.250000	17.280001	45670400.0	15.868218
+2015-12-30	17.240000	17.040001	17.200001	17.049999	35066400.0	15.657003
+2015-12-31	17.070000	16.830000	17.010000	16.830000	47153000.0	15.454980
+2517 rows × 6 columns
+
+# we can get the from other banks with the same method as folows:
+# CitiGroup
+C = data.DataReader("C", 'yahoo', start, end)
+
+# Goldman Sachs
+GS = data.DataReader("GS", 'yahoo', start, end)
+
+# JPMorgan Chase
+JPM = data.DataReader("JPM", 'yahoo', start, end)
+
+# Morgan Stanley
+MS = data.DataReader("MS", 'yahoo', start, end)
+
+# Wells Fargo
+WFC = data.DataReader("WFC", 'yahoo', start, end)
+MS
+High	Low	Open	Close	Volume	Adj Close
+Date						
+2006-01-03	58.490002	56.740002	57.169998	58.310001	5377000.0	37.429329
+2006-01-04	59.279999	58.349998	58.700001	58.349998	7977800.0	37.455013
+2006-01-05	58.590000	58.020000	58.549999	58.509998	5778000.0	37.557716
+2006-01-06	58.849998	58.049999	58.770000	58.570000	6889800.0	37.596241
+2006-01-09	59.290001	58.619999	58.630001	59.189999	4144500.0	37.994202
+...	...	...	...	...	...	...
+2015-12-24	32.709999	32.439999	32.570000	32.480000	2798200.0	29.116337
+2015-12-28	32.360001	31.950001	32.360001	32.169998	5420300.0	28.838438
+2015-12-29	32.700001	32.330002	32.439999	32.549999	6388200.0	29.179089
+2015-12-30	32.650002	32.200001	32.500000	32.230000	5057200.0	28.892221
+2015-12-31	32.299999	31.770000	31.910000	31.809999	8154300.0	28.515720
+2517 rows × 6 columns
+
+#here we create  alis of banks' ticker in order to concatenate them according to these thickers list
+tickers=["BAC","C","GS","JPM","MS","WFC"]
+bank_stocks=pd.concat([BAC,C,GS,JPM,MS,WFC],axis=1,keys=tickers)
+bank_stocks # now we have concatenated all of the banks stock prices as a new data frame name bank_stocks
+BAC	C	...	MS	WFC
+High	Low	Open	Close	Volume	Adj Close	High	Low	Open	Close	...	Open	Close	Volume	Adj Close	High	Low	Open	Close	Volume	Adj Close
+Date																					
+2006-01-03	47.180000	46.150002	46.919998	47.080002	16296700.0	35.054218	493.799988	481.100006	490.000000	492.899994	...	57.169998	58.310001	5377000.0	37.429329	31.975000	31.195000	31.600000	31.900000	11016400.0	20.904305
+2006-01-04	47.240002	46.450001	47.000000	46.580002	17757900.0	34.681938	491.000000	483.500000	488.600006	483.799988	...	58.700001	58.349998	7977800.0	37.455013	31.820000	31.365000	31.799999	31.530001	10870000.0	20.661839
+2006-01-05	46.830002	46.320000	46.580002	46.639999	14970700.0	34.726604	487.799988	484.000000	484.399994	486.200012	...	58.549999	58.509998	5778000.0	37.557716	31.555000	31.309999	31.500000	31.495001	10158000.0	20.638908
+2006-01-06	46.910000	46.349998	46.799999	46.570000	12599800.0	34.674480	489.000000	482.000000	488.799988	486.200012	...	58.770000	58.570000	6889800.0	37.596241	31.775000	31.385000	31.580000	31.680000	8403800.0	20.760138
+2006-01-09	46.970001	46.360001	46.720001	46.599998	15619400.0	34.696808	487.399994	483.000000	486.000000	483.899994	...	58.630001	59.189999	4144500.0	37.994202	31.825001	31.555000	31.674999	31.674999	5619600.0	20.756863
+...	...	...	...	...	...	...	...	...	...	...	...	...	...	...	...	...	...	...	...	...	...
+2015-12-24	17.379999	17.219999	17.320000	17.270000	29369400.0	15.859037	52.970001	52.450001	52.480000	52.709999	...	32.570000	32.480000	2798200.0	29.116337	55.090000	54.709999	54.970001	54.820000	4999400.0	46.785397
+2015-12-28	17.230000	16.980000	17.219999	17.129999	41777500.0	15.730473	52.570000	51.959999	52.570000	52.380001	...	32.360001	32.169998	5420300.0	28.838438	54.779999	54.169998	54.549999	54.680000	8288800.0	46.665909
+2015-12-29	17.350000	17.160000	17.250000	17.280001	45670400.0	15.868218	53.220001	52.740002	52.759998	52.980000	...	32.439999	32.549999	6388200.0	29.179089	55.349998	54.990002	55.110001	55.290001	7894900.0	47.186504
+2015-12-30	17.240000	17.040001	17.200001	17.049999	35066400.0	15.657003	52.939999	52.250000	52.840000	52.299999	...	32.500000	32.230000	5057200.0	28.892221	55.310001	54.790001	55.270000	54.889999	8016900.0	46.845135
+2015-12-31	17.070000	16.830000	17.010000	16.830000	47153000.0	15.454980	52.389999	51.750000	52.070000	51.750000	...	31.910000	31.809999	8154300.0	28.515720	54.950001	54.220001	54.509998	54.360001	10929800.0	46.392815
+2517 rows × 36 columns
+
+bank_stocks.columns.names = ['Bank Ticker','Stock Info'] # we create two new column names as Bank Ticker and Stock Info
+bank_stocks
+Bank Ticker	BAC	C	...	MS	WFC
+Stock Info	High	Low	Open	Close	Volume	Adj Close	High	Low	Open	Close	...	Open	Close	Volume	Adj Close	High	Low	Open	Close	Volume	Adj Close
+Date																					
+2006-01-03	47.180000	46.150002	46.919998	47.080002	16296700.0	35.054218	493.799988	481.100006	490.000000	492.899994	...	57.169998	58.310001	5377000.0	37.429329	31.975000	31.195000	31.600000	31.900000	11016400.0	20.904305
+2006-01-04	47.240002	46.450001	47.000000	46.580002	17757900.0	34.681938	491.000000	483.500000	488.600006	483.799988	...	58.700001	58.349998	7977800.0	37.455013	31.820000	31.365000	31.799999	31.530001	10870000.0	20.661839
+2006-01-05	46.830002	46.320000	46.580002	46.639999	14970700.0	34.726604	487.799988	484.000000	484.399994	486.200012	...	58.549999	58.509998	5778000.0	37.557716	31.555000	31.309999	31.500000	31.495001	10158000.0	20.638908
+2006-01-06	46.910000	46.349998	46.799999	46.570000	12599800.0	34.674480	489.000000	482.000000	488.799988	486.200012	...	58.770000	58.570000	6889800.0	37.596241	31.775000	31.385000	31.580000	31.680000	8403800.0	20.760138
+2006-01-09	46.970001	46.360001	46.720001	46.599998	15619400.0	34.696808	487.399994	483.000000	486.000000	483.899994	...	58.630001	59.189999	4144500.0	37.994202	31.825001	31.555000	31.674999	31.674999	5619600.0	20.756863
+...	...	...	...	...	...	...	...	...	...	...	...	...	...	...	...	...	...	...	...	...	...
+2015-12-24	17.379999	17.219999	17.320000	17.270000	29369400.0	15.859037	52.970001	52.450001	52.480000	52.709999	...	32.570000	32.480000	2798200.0	29.116337	55.090000	54.709999	54.970001	54.820000	4999400.0	46.785397
+2015-12-28	17.230000	16.980000	17.219999	17.129999	41777500.0	15.730473	52.570000	51.959999	52.570000	52.380001	...	32.360001	32.169998	5420300.0	28.838438	54.779999	54.169998	54.549999	54.680000	8288800.0	46.665909
+2015-12-29	17.350000	17.160000	17.250000	17.280001	45670400.0	15.868218	53.220001	52.740002	52.759998	52.980000	...	32.439999	32.549999	6388200.0	29.179089	55.349998	54.990002	55.110001	55.290001	7894900.0	47.186504
+2015-12-30	17.240000	17.040001	17.200001	17.049999	35066400.0	15.657003	52.939999	52.250000	52.840000	52.299999	...	32.500000	32.230000	5057200.0	28.892221	55.310001	54.790001	55.270000	54.889999	8016900.0	46.845135
+2015-12-31	17.070000	16.830000	17.010000	16.830000	47153000.0	15.454980	52.389999	51.750000	52.070000	51.750000	...	31.910000	31.809999	8154300.0	28.515720	54.950001	54.220001	54.509998	54.360001	10929800.0	46.392815
+2517 rows × 36 columns
+
+# Now our data is ready for explainatory data analysis
+for tick in tickers:
+    print(tick,bank_stocks[tick]["Close"].max()) #for example this is the max Close price for each bank's stock throughout the time period
+BAC 54.900001525878906
+C 564.0999755859375
+GS 247.9199981689453
+JPM 70.08000183105469
+MS 89.30000305175781
+WFC 58.52000045776367
+# we can get the same outcome by using df.xs() method:
+bank_stocks.xs(key="Close",axis=1, level="Stock Info").max()
+Bank Ticker
+BAC     54.900002
+C      564.099976
+GS     247.919998
+JPM     70.080002
+MS      89.300003
+WFC     58.520000
+dtype: float64
+# here we create a new empty DataFrame called returns in order to see daily price changes of the banks
+#pct_change(periods=1, fill_method='pad', limit=None, freq=None, **kwargs)
+returns=pd.DataFrame()
+for tick in tickers:
+    returns[tick + "Return"]=bank_stocks[tick]["Close"].pct_change()
+returns.head()
+BACReturn	CReturn	GSReturn	JPMReturn	MSReturn	WFCReturn
+Date						
+2006-01-03	NaN	NaN	NaN	NaN	NaN	NaN
+2006-01-04	-0.010620	-0.018462	-0.013812	-0.014183	0.000686	-0.011599
+2006-01-05	0.001288	0.004961	-0.000393	0.003029	0.002742	-0.001110
+2006-01-06	-0.001501	0.000000	0.014169	0.007046	0.001025	0.005874
+2006-01-09	0.000644	-0.004731	0.012030	0.016242	0.010586	-0.000158
+bank_stocks.idxmin() #worst single day returns
+Bank Ticker  Stock Info
+BAC          High         2009-03-05
+             Low          2009-02-20
+             Open         2009-03-09
+             Close        2009-03-06
+             Volume       2006-11-24
+             Adj Close    2009-03-06
+C            High         2009-03-09
+             Low          2009-03-05
+             Open         2009-03-09
+             Close        2009-03-05
+             Volume       2006-07-03
+             Adj Close    2009-03-05
+GS           High         2008-11-21
+             Low          2008-11-21
+             Open         2008-11-20
+             Close        2008-11-20
+             Volume       2014-12-24
+             Adj Close    2008-11-20
+JPM          High         2009-03-09
+             Low          2009-03-06
+             Open         2009-03-09
+             Close        2009-03-09
+             Volume       2006-11-24
+             Adj Close    2009-03-09
+MS           High         2008-11-21
+             Low          2008-10-10
+             Open         2008-10-10
+             Close        2008-11-20
+             Volume       2006-11-24
+             Adj Close    2008-11-20
+WFC          High         2009-03-05
+             Low          2009-03-05
+             Open         2009-03-09
+             Close        2009-03-05
+             Volume       2006-10-09
+             Adj Close    2009-03-05
+dtype: datetime64[ns]
+bank_stocks.idxmax() #maximum return prices according to dates
+Bank Ticker  Stock Info
+BAC          High         2006-11-20
+             Low          2006-11-17
+             Open         2006-11-21
+             Close        2006-11-16
+             Volume       2009-12-04
+             Adj Close    2007-10-05
+C            High         2006-12-28
+             Low          2006-12-28
+             Open         2006-12-28
+             Close        2006-12-27
+             Volume       2009-12-17
+             Adj Close    2006-12-27
+GS           High         2007-10-31
+             Low          2007-10-31
+             Open         2007-11-01
+             Close        2007-10-31
+             Volume       2008-09-18
+             Adj Close    2007-10-31
+JPM          High         2015-07-23
+             Low          2015-07-23
+             Open         2015-07-23
+             Close        2015-07-22
+             Volume       2012-05-11
+             Adj Close    2015-07-22
+MS           High         2007-06-15
+             Low          2007-06-14
+             Open         2007-06-15
+             Close        2007-06-14
+             Volume       2008-09-17
+             Adj Close    2007-06-14
+WFC          High         2015-07-23
+             Low          2015-07-23
+             Open         2015-07-23
+             Close        2015-07-22
+             Volume       2009-05-08
+             Adj Close    2015-07-22
+dtype: datetime64[ns]
+bank_stocks["BAC"].max() # maximum prices
+Stock Info
+High         5.508000e+01
+Low          5.482000e+01
+Open         5.504000e+01
+Close        5.490000e+01
+Volume       1.226791e+09
+Adj Close    4.239248e+01
+dtype: float64
+bank_stocks["BAC"].min()
+Stock Info
+High         3.510000e+00
+Low          2.530000e+00
+Open         3.220000e+00
+Close        3.140000e+00
+Volume       4.835400e+06
+Adj Close    2.778526e+00
+dtype: float64
+import seaborn as sns 
+sns.pairplot(returns)# here we create a pairplot using seaborn of the returns dataframe to see relations between banks returns of different banks
+<seaborn.axisgrid.PairGrid at 0x7fd94023bc10>
+
+returns.idxmin() #returns each bank stock had the worst return
+BACReturn   2009-01-20
+CReturn     2009-02-27
+GSReturn    2009-01-20
+JPMReturn   2009-01-20
+MSReturn    2008-10-09
+WFCReturn   2009-01-20
+dtype: datetime64[ns]
+returns.idxmax()#returns each bank stock had the best returns
+BACReturn   2009-04-09
+CReturn     2008-11-24
+GSReturn    2008-11-24
+JPMReturn   2009-01-21
+MSReturn    2008-10-13
+WFCReturn   2008-07-16
+dtype: datetime64[ns]
+# df.std() method is very useful because it returns the standart deviations of each bank:
+# if standart deviation is larger than others, it means that it is the riskiest among the other
+returns.std()
+# here we understand that Citibank is the riskiest bank 
+BACReturn    0.036647
+CReturn      0.038672
+GSReturn     0.025390
+JPMReturn    0.027667
+MSReturn     0.037819
+WFCReturn    0.030238
+dtype: float64
+returns.loc["2015-01-01":"2015-12-30"].std() # this returns the standart deviation of banks in 2015
+BACReturn    0.016175
+CReturn      0.015306
+GSReturn     0.014061
+JPMReturn    0.014034
+MSReturn     0.016263
+WFCReturn    0.012602
+dtype: float64
+plt.figure(figsize=(15,10))
+sns.distplot(returns["MSReturn"].loc["2015-01-01":"2015-12-30"],bins=50)
+# here we create a distplot using seaborn of the 2015 returns for Morgan Stanley
+<matplotlib.axes._subplots.AxesSubplot at 0x7fd93733add0>
+
+plt.figure(figsize=(15,10))
+sns.distplot(returns["CReturn"].loc["2008-01-01":"2008-12-30"],bins=50,color="red")
+# here we create a distplot using seaborn of the 2008 returns for CitiGroup 
+<matplotlib.axes._subplots.AxesSubplot at 0x7fd935ae7a10>
+
+# better visualization quality I will import plotly library
+import plotly
+import cufflinks as cf
+from plotly.offline import download_plotlyjs,init_notebook_mode,plot,iplot
+init_notebook_mode(connected=True) #this will connect our notebook to the library
+cf.go_offline()
+close=bank_stocks.xs(key="Close",axis=1, level="Stock Info")
+close.iplot()
+# here we create a line plot showing Close price for each bank for the entire index of time.
+
+bank_stocks["BAC"]["Close"].iplot()
+# we can get this line plot for each bank separately as seen below
+
+bank_stocks.xs(key="Volume",axis=1, level="Stock Info").iplot() 
+# here we plot the volume of stocks per bank
+
+bank_stocks.xs(key="Close",axis=1, level="Stock Info").mean().iplot(title='The Overall Average Close Prices of Banks in 2008', xTitle='Banks')
+bank_stocks["BAC"]["Close"].loc["2008-01-01":"2009-01-01"].rolling(window=30).mean().iplot(title='The Monthly Average of Close Prices Bank of America in 2008', xTitle='Months')
+#here we plot the rolling 30 day average against the Close Price for Bank Of America's stock for the year 2008
+
+#we can show the two plot with in a single plot figure in order to make better comparisons:
+plt.figure(figsize=(20,10))
+bank_stocks["BAC"]["Close"].loc["2008-01-01":"2009-01-01"].plot(label="BAC Close",title='The Overall Average Close Prices of Bank of America in 2008 vs The Monthly Average Close Prices of Bank of America in 2008')
+bank_stocks["BAC"]["Close"].loc["2008-01-01":"2009-01-01"].rolling(window=30).mean().plot(label="BAC Monthly Average")
+plt.legend()
+# so we can see general trend of months versus daily changes
+
+bank_stocks.corr()
+# here we get the correlation values between banks
+
+bank_stocks.xs(key="Close",axis=1, level="Stock Info")#here is closing prices of different banks
+
+bank_stocks.xs(key="Close",axis=1, level="Stock Info").corr() 
+# here we can see the correlation between closing prices of different banks
+
+plt.figure(figsize=(20,10))
+sns.heatmap(bank_stocks.xs(key="Close",axis=1, level="Stock Info").corr(),cmap="coolwarm",linecolor="white", linewidths=1,annot=True)
+#This is the heatmap of the correlation between close prices of different banks
+
+sns.clustermap(bank_stocks.xs(key="Close",axis=1, level="Stock Info").corr(),cmap="coolwarm",linecolor="white", linewidths=1,annot=True)
+#This is the clustertmap of the correlation between close prices of different banks that provides relational heatmap
+
+# here we use .iplot(kind='candle) to create a candle plot of Bank of America's stock from Jan 1st 2015 to Jan 1st 2016
+bank_stocks["BAC"].loc["2015-01-15":"2016-01-03"].iplot(kind="candle")
+# we can see interactive detailed stock prices of each day like opening and closing price
+
+bank_stocks["MS"]["Close"].loc["2015-01-01":"2015-12-31"].rolling(window=30).mean().iplot()
+
+bank_stocks["MS"]["Close"].loc["2015-01-01":"2015-12-31"].ta_plot(study="sma",periods=[7,30,55])
+# SMA means  simple moving average closing prices in the concerned period of time
+#here we can see 7, 30 and 55 days periods of Close price changes of Morgan Stanley in 2015 in the plotly iplot
+
+bank_stocks["BAC"]["Close"].loc["2015-01-01":"2015-12-31"].ta_plot(study="boll") 
+#here we create a Bollinger Band Plot for Bank of America for the year 2015.
+
